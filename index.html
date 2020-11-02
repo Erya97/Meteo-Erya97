@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Meteo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="app-wrap">
+      <header>
+        <input type="text" autocomplete="off" class="search-box" placeholder="Scrivi il nome di una città..." />
+      </header>
+      <main>
+        <section class="location">
+          <div class="city">Città</div>
+          <div class="date">Data</div>
+        </section>
+        <div class="current">
+          <div class="temp">Gradi<span> °C</span></div>
+          <div class="weather">Meteo</div>
+          <div class="hi-low">Gradi min. / Gradi max.</div>
+        </div>
+        <p>oppure</p>
+        <button id="location">Geolocalizza la tua Posizione</button>
+        <p id="status">Nessuna posizione trovata.</p>
+        <div id="Meteo">
+          <section class="location">
+          <p class="city">Nessun Dato Meteo.</p>
+          </section>
+        </div>
+      </main>
+    </div>
+
+  <script src="main.js"></script>
+
+
+  <script src="openWeatherAPIKey.js" charset="UTF-8"></script>
+  <script type="text/javascript">
+
+  //////////geolocalizzazione
+  document.querySelector('#location').addEventListener('click', geoLookUp, false)
+
+  function geoLookUp(){
+    const status = document.querySelector('#status')
+
+    function success(position){
+      const latitude = position.coords.latitude
+      const longitude = position.coords.longitude
+      status.textContent = `lat: ${latitude}, lon: ${longitude}`
+      setWeather(latitude, longitude)
+    }
+    function error(err){
+      status.textContent = `Impossibile trovare la tua geolocalizzazione. Errore: ${err.code}. ${err.message}`
+    }
+
+    if (!navigator.geolocation){
+      status.textContent = "La geolocalizzazione non è supportata o permessa dal tuo browser"
+    } else {
+      status.textContent = "Localizzazione in corso..."
+      navigator.geolocation.getCurrentPosition(success, error)
+    }
+  }
+
+  //////////Meteo della geolocalizzazione
+  function setWeather(latitude, longitude){
+    const p = document.querySelector('#Meteo p')
+
+    let openWeatherData = {}
+    let xhr = new XMLHttpRequest()
+    xhr.open('GET', `http://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${openWeatherKey}&units=metric`)
+    xhr.responseType = 'text'
+
+    xhr.addEventListener('load', function(){
+      if (xhr.status === 200){
+        p.textContent = "loading..."
+        openWeatherData = JSON.parse(xhr.responseText)
+        populateWeatherInfo(openWeatherData, p)
+      } else {
+        p.textContent = "error: " + xhr.status
+      }
+    }, false)
+
+    xhr.send()
+  }
+
+  function populateWeatherInfo(openWeatherData, p){
+    //città, temperatura, meteo
+    const location = openWeatherData.name
+    const temp = Math.round(openWeatherData.main.temp)
+
+    let weather = openWeatherData.weather[0].main
+
+    if(weather == "Clear") {
+      weather = "Sereno";
+    }
+    else if(weather == "Clouds") {
+      weather = "Nuvoloso";
+    }
+    else if(weather == "Thunderstorm") {
+      weather = "Temporale";
+    }
+    else if(weather == "Drizzle") {
+      weather = "Pioggerella";
+    }
+    else if(weather == "Rain") {
+      weather = "Pioggia";
+    }
+    else if(weather == "Snow") {
+      weather = "Neve";
+    }
+    else if(weather == "Mist") {
+      weather = "Nebbia";
+    }
+    else if(weather == "Smoke") {
+      weather = "Fumo";
+    }
+    else if(weather == "Haze") {
+      weather = "Foschia";
+    }
+    else if(weather == "Dust") {
+      weather = "Turbine di Sabbia";
+    }
+    else if(weather == "Fog") {
+      weather = "Nebbia";
+    }
+    else if(weather == "Sand") {
+      weather = "Sabbia";
+    }
+    else if(weather == "Ash") {
+      weather = "Cenere";
+    }
+    else if(weather == "Squall") {
+      weather = "Burrasca";
+    }
+    else if(weather == "Tornado") {
+      weather = "Tornado";
+    }
+
+    const str = `${location}<br>${temp} &#0176C;<br>${weather}`
+    p.innerHTML = str
+  }
+
+  </script>
+
+  </body>
+  </html>
